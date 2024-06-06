@@ -18,7 +18,7 @@ function Home() {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          `https://internareabackend-xz9i.onrender.com/api/internship`
+          `https://backendinternspot.onrender.com/api/internship`
         );
         setInternshipData(response.data);
       } catch (error) {

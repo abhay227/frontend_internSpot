@@ -11,7 +11,7 @@ function ViewAllApplication() {
     useEffect(()=>{
         const fetchApplication= async()=>{
         try {
-            const response=await axios.get("https://internareabackend-xz9i.onrender.com/api/application")
+            const response=await axios.get("https://backendinternspot.onrender.com/api/application")
 setApplication(response.data)
 
         } catch (error) {

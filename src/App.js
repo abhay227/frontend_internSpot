@@ -21,26 +21,41 @@ import DeatilApplication from './Applications/DeatilApplication';
 import UserApplication from './profile/UserApplication';
 import UserapplicationDetail from "./Applications/DeatilApplicationUser"
 import PostJob from './Admin/PostJob';
+import SubscriptionCard from './subscription/SubscriptionCard';
+import Resume from './subscription/Resume';
+import UserResume from './subscription/UserResume';
+import ResumeDetail from './Admin/ResumeDetail';
+import { clearResume, fetchResume } from './Feature/resumeSlice';
+// import ResumeDetail from './Admin/ResumeDetail';
 function App() {
   const user=useSelector(selectUser);
   const dispatch=useDispatch();
   useEffect(() => {
-    auth.onAuthStateChanged((authUser)=>{
-      if(authUser){
+    const unsubscribe = auth.onAuthStateChanged((authUser) => {
+      if (authUser) {
         dispatch(login({
-  
-          uid:authUser.uid,
-          photo:authUser.photoURL,
-          name:authUser.displayName,
-          email:authUser.email,
-          phoneNumber:authUser.phoneNumber
-        }))
+          uid: authUser.uid,
+          photo: authUser.photoURL,
+          name: authUser.displayName,
+          email: authUser.email,
+          phoneNumber: authUser.phoneNumber,
+        }));
+        dispatch(fetchResume(authUser.uid)); // Fetch resume when user logs in
+      } else {
+        dispatch(logout());
+        dispatch(clearResume()); // Clear resume when user logs out
       }
-        else{
-          dispatch(logout())
-        }
-    })
-    },[dispatch] );
+    });
+
+    return () => unsubscribe();
+  }, [dispatch]);
+
+
+    const handleSaveResume = (resumeData) => {
+      console.log('Resume Data:', resumeData);
+      // Add logic to save the resume data to the student's profile
+      // For example, make an API call to save the data to your backend
+    };
   return (
     <div className="App">
 <Navbar/>
@@ -60,6 +75,11 @@ function App() {
 <Route path='/applications' element={<ViewAllApplication/>}/>
 <Route path='/UserapplicationDetail' element={< UserapplicationDetail/>}/>
 <Route path='/userapplication' element={<UserApplication/>}/>
+<Route path='/manage-subscription' element={<SubscriptionCard/>}/>
+<Route path='/create-resume' element={<Resume onSave={handleSaveResume}/>}/>
+<Route path='/your-resume' element={<UserResume/>}/>
+<Route path='/resume' element={<ResumeDetail />} />
+
 </Routes>
 <Footer/>
     </div>

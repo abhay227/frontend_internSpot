@@ -51,7 +51,7 @@ function PostJob() {
           AdditionalInfo:additionalInfo,
   
       }
-  axios.post("https://internareabackend-xz9i.onrender.com/api/job",bodyJosn).then((res)=>{
+  axios.post("https://backendinternspot.onrender.com/api/job",bodyJosn).then((res)=>{
       console.log(res.data)
       alert(" Job Posted Successfully")
       navigate("/adminepanel")

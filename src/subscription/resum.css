@@ -1,0 +1,146 @@
+/*   
+  
+  h1 {
+    text-align: center;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  label {
+    display: block;
+    margin-bottom: 5px;
+  }
+  
+  input, textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+  }
+  
+  
+
+  
+ 
+   */
+   body {
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+    background-color: #f0f2f5;
+}
+
+.resume-container {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    max-width: 900px;
+    margin: 40px auto;
+}
+
+.resume-container h1{
+  font-size: 2.5rem;
+}
+
+.resume-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid #0073b1;
+    padding-bottom: 20px;
+    margin-bottom: 40px;
+}
+
+.header-text {
+    align-self: flex-start;
+}
+
+.header-text h1 {
+    margin: 0;
+    font-size: 2.5em;
+    color: #333;
+}
+
+.header-text p {
+    margin: 5px 0;
+    font-size: 1em;
+    color: #666;
+}
+
+.user-photo img {
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+}
+
+.resume-section {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 40px;
+    text-align: left;
+}
+
+.resume-section h2 {
+    font-size: 1.75em;
+    color: #0073b1;
+    border-bottom: 2px solid #0073b1;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.resume-item {
+    display: flex;
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.resume-item h3 {
+    margin: 0;
+    font-size: 1.25em;
+    color: #333;
+}
+
+.resume-item p {
+    margin: 5px 0;
+    font-size: 1em;
+    text-align: left;
+}
+
+.resume-item ul {
+    list-style-type: disc;
+    padding-left: 20px;
+}
+
+.resume-item ul li {
+    margin-bottom: 10px;
+    font-size: 1em;
+    color: #666;
+}
+
+.skills-list {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.skills-list li {
+    background-color: #e1f5fe;
+    color: #0073b1;
+    font-weight: bold;
+    border-radius: 5px;
+    padding: 10px 15px;
+    margin: 5px;
+    flex: 1 1 auto;
+    text-align: center;
+}
+
+/* New flex-container styling */
+.flex-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}

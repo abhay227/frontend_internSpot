@@ -1,10 +1,31 @@
-import React from "react";
+import React, { useEffect,useState } from "react";
 import { useSelector } from "react-redux";
 import { selectUser } from "../Feature/Userslice";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
 function Profile() {
   const user = useSelector(selectUser);
+  const [activeSubscriptions, setActiveSubscriptions] = useState('');
+  const { resume, loading, error } = useSelector((state) => state.resume);
+  
+  useEffect(() => {
+    const fetchActiveSubscriptions = async () => {
+      try {
+        const response = await axios.get(`https://backendinternspot.onrender.com/api/users/${user?.uid}`, {
+        
+        });
+        setActiveSubscriptions(response.data);
+        console.log("active subscriptions",activeSubscriptions);
+      } catch (error) {
+        console.error("Error fetching active subscriptions:", error);
+      }
+    };
+
+    fetchActiveSubscriptions();
+  }, [user]);
+
+
   return (
     <div>
       <div className="flex items-center mt-9 mb-4 justify-center">
@@ -41,6 +62,21 @@ function Profile() {
                 </span>
               </Link>
             </div>
+
+            {activeSubscriptions && activeSubscriptions.subscription.plan === 'gold' && resume  ? (
+          <div className="flex justify-center mt-3">
+            <Link to="/your-resume">
+              
+              <p id="int" className="mt-2">
+              <i class="bi bi-star-fill"></i>Your Resume</p>
+            </Link>
+          </div>
+        ) : (
+          <p></p>
+        )}
+           
+
+
           </div>
         </div>
       </div>

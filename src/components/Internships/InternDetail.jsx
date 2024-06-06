@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useSelector } from 'react-redux'
+import { useSelector,useDispatch } from 'react-redux'
 import { selectUser } from '../../Feature/Userslice'
+import { fetchResume, downloadResume } from '../../Feature/resumeSlice'; 
 import "./detail.css"
 import axios from 'axios'
 
@@ -11,6 +12,7 @@ function InternDetail() {
   const [textare, setTextare]=useState("")
   const [company,setCompany]=useState("")
   const [category,setCategory]=useState("")
+  const { resume, loading, error } = useSelector((state) => state.resume);
   const navigate=useNavigate();
   let search=window.location.search;
   const params=new URLSearchParams(search);
@@ -24,7 +26,7 @@ const hide=()=>{
 const [data,setData] =useState([])
 useEffect(()=>{
    const fetchData= async()=>{
-  const response=await axios.get(`https://internareabackend-xz9i.onrender.com/api/internship/${id}`)
+  const response=await axios.get(`https://backendinternspot.onrender.com/api/internship/${id}`)
   setData(response.data)
 
   const {company,category}=response.data;
@@ -34,31 +36,44 @@ useEffect(()=>{
    fetchData()
 })
 
-const submitApplication= async()=>{
-  const text=document.getElementById("text")
-    if (text.value==="") {
-      alert("Fill the mendetory fildes")
+const submitApplication = async () => {
+  const text = document.getElementById("text");
+  if (text.value === "") {
+    alert("Fill the mandatory fields");
+  } else {
+    console.log("here is the resume", resume);
+    const bodyJson = {
+      coverLetter: text.value,
+      category: category,
+      company: company,
+      user: user,
+      Application: id
+    };
+    if (resume) {
+      bodyJson.resume = resume._id;
     }
-    else{
-      const bodyJson={
-        coverLetter:textare,
-        category:category,
-        company :company,
-        user:user,
-        Application:id
+    console.log(bodyJson);
+    try {
+      await axios.post("https://backendinternspot.onrender.com/api/application", bodyJson);
+      alert("Done");
+      navigate("/internship");
+    } catch (err) {
+      if (err.response && err.response.status === 403) {
+        if (err.response.data.message === "Subscription not active") {
+          alert("Subscription not active");
+        } else if(err.response.data.message === "Application limit reached for this month") {
+          alert("Applications limit reached for this month for the active plan");
+        }
+        else{
+          alert("error");
+        }
+      }  else {
+        alert("An error happened");
       }
-    
-      await axios.post("https://internareabackend-xz9i.onrender.com/api/application",bodyJson).then((res)=>{
-  
-  
-        
-      }).catch((err)=>{
-        alert("error happend")
-      })
-      alert("Done")
-      navigate("/Jobs")
     }
   }
+};
+
   return (
     <div>
       
@@ -144,7 +159,7 @@ const submitApplication= async()=>{
       <p className='mt-5 font-semibold text-xl'>Cover letter</p>
       <br />
       <p>why should we hire for this role?</p>
-      <textarea name="coverLetter" placeholder='' id="text"  value={textare} onChange={(e)=>setTextare(e.target.value)}></textarea>
+      <textarea  name="coverLetter" placeholder='' id="text"  value={textare} onChange={(e)=>setTextare(e.target.value)}></textarea>
       <p className='mt-5 font-semibold text-xl'>your availiblity</p>
       <p>confirme your availiblity</p>
 

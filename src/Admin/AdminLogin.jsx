@@ -16,7 +16,7 @@ else{
         username:username,
         password:password
     }
-    axios.post("https://internareabackend-xz9i.onrender.com/api/admin/adminLogin",bodyjson).then((res)=>{
+    axios.post("https://backendinternspot.onrender.com/api/admin/adminLogin",bodyjson).then((res)=>{
         console.log(res,"data is send")
         alert("login successfull")
         navigate("/adminepanel")

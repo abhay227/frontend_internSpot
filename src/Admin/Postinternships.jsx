@@ -52,7 +52,7 @@ function Postinternships() {
           AdditionalInfo:additionalInfo,
   
       }
-  axios.post("https://internareabackend-xz9i.onrender.com/api/internship",bodyJosn).then((res)=>{
+  axios.post("https://backendinternspot.onrender.com/api/internship",bodyJosn).then((res)=>{
       console.log(res.data)
       alert(" Internship Posted Successfully")
   navigate("/adminepanel")
