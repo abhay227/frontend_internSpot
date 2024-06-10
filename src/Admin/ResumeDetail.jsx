@@ -10,8 +10,10 @@ function ResumeDetail() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [photoBlob, setPhotoBlob] = useState(null);
+    const [user,setUser] = useState("");
 
     useEffect(() => {
+        
         const fetchResume = async () => {
             try {
                 const response = await axios.get(`https://backendinternspot.onrender.com/api/users/resum/${id}`);
@@ -28,10 +30,25 @@ function ResumeDetail() {
     }, [id]);
 
     useEffect(() => {
+      const fetchUser = async () => {
+          if (resume?.userId) {
+              try {
+                  const response = await axios.get(`https://backendinternspot.onrender.com/api/users/${resume.userId}`);
+                  setUser(response.data);
+              } catch (err) {
+                  console.error("Error fetching user data:", err);
+              }
+          }
+      };
+
+      fetchUser();
+  }, [resume]);
+
+    useEffect(() => {
         const fetchPhoto = async () => {
           if (resume?.photo) {
             try {
-              const response = await axios.get(`http://localhost:5000/${resume.photo}`, {
+              const response = await axios.get(`https://backendinternspot.onrender.com/${resume.photo}`, {
                 responseType: 'blob'
               });
               setPhotoBlob(response.data);
@@ -43,23 +60,6 @@ function ResumeDetail() {
     
         fetchPhoto();
       }, [resume]);
-
-    //   useEffect(() => {
-    //     const fetchUser = async () => {
-    //       if (resume) {
-    //         try {
-    //           const response = await axios.get(`http://localhost:5000/${resume.photo}`, {
-    //             responseType: 'blob'
-    //           });
-    //           setPhotoBlob(response.data);
-    //         } catch (err) {
-    //           console.error("Error fetching photo:", err);
-    //         }
-    //       }
-    //     };
-    
-    //     fetchUser();
-    //   }, [resume]);
 
     if (loading) return <div>Loading...</div>;
     if (error) return <div>{error}</div>;
@@ -73,7 +73,7 @@ function ResumeDetail() {
       <header className="resume-header">
         <div className="header-text">
           <h1>{resume.fullName}</h1>
-          <p>email</p>
+          <p>{user.email}</p>
         </div>
         <div className="user-photo ">
           {photoBlob && (

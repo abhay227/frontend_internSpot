@@ -10,6 +10,7 @@ import { login } from "../../Feature/Userslice";
 import { selectUser } from "../../Feature/Userslice";
 import { useNavigate } from "react-router-dom";
 import { fetchResume } from "../../Feature/resumeSlice";
+import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import axios from "axios";
 function Navbar() {
   const navigate = useNavigate();
@@ -25,11 +26,20 @@ function Navbar() {
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [order, setOrder] = useState(null);
+
+  //phone no state
+  const countryCode = "+91";
+  const [phoneNumber, setPhoneNumber] = useState(countryCode);
+  const [expandForm, setExpandForm] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [confirmationResult, setConfirmationResult] = useState(null);
   const { resume, loading, error } = useSelector((state) => state.resume);
   const dispatch = useDispatch();
 
   useEffect(() => {
+    
     const fetchActiveSubscriptions = async () => {
+  
       try {
         const response = await axios.get(
           `https://backendinternspot.onrender.com/api/users/${user?.uid}`,
@@ -45,11 +55,64 @@ function Navbar() {
     fetchActiveSubscriptions();
   }, [user]);
 
+
+  const requestOTP = async (e) => {
+    e.preventDefault();
+    console.log(phoneNumber);
+    try{
+      const response = await generateRecaptcha(phoneNumber);
+      console.log(response);
+      setConfirmationResult(response);
+      setExpandForm(true);
+    }catch(error){
+      console.log(error);
+    }
+  };
+
+
+  const generateRecaptcha = (phoneNumber) => {
+    const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {});
+    recaptchaVerifier.render();
+    return signInWithPhoneNumber(auth,phoneNumber,recaptchaVerifier);
+  };
+
+
+  const verifyCode = async (e) => {
+  e.preventDefault();
+  
+  if (!verificationCode) {
+    alert("Please enter the verification code.");
+    return;
+  }
+  
+  if (!confirmationResult) {
+    alert("No OTP request found. Please request OTP first.");
+    return;
+  }
+  
+  try {
+    const result = await confirmationResult.confirm(verificationCode);
+    // User signed in successfully
+    const user = result.user;
+    console.log(user);
+    setExpandForm(false);
+    setDivVisibleFrologin(false);
+    navigate("/");
+  } catch (error) {
+    console.error("Error during verifying code:", error);
+    alert("Invalid verification code. Please try again.");
+  }
+};
+
+
   const sendOtp = async () => {
     try {
-      await axios.post("https://backendinternspot.onrender.com/api/payment/send-otp", {
-        email: user.email,
-      });
+      await axios.post(
+        "https://backendinternspot.onrender.com/api/payment/send-otp",
+        {
+          email: user.email,
+        }
+      );
       setOtpSent(true);
       alert("OTP has been sent to your email.");
     } catch (error) {
@@ -71,10 +134,13 @@ function Navbar() {
       if (response.data.success) {
         // OTP is verified, now create Razorpay order
         const {
-          data: { order },
-        } = await axios.post("https://backendinternspot.onrender.com/api/payment/checkout", {
-          amount,
-        });
+          data: { order}
+        } = await axios.post(
+          "https://backendinternspot.onrender.com/api/coupon/create-order",
+          {
+            amount, // Amount in smallest currency unit
+          }
+        );
         setOrder(order);
         setOtpSent(false);
         alert("OTP verified. Proceeding to payment.");
@@ -142,6 +208,54 @@ function Navbar() {
       },
     };
 
+  //   const options = {
+  //     key, // Replace with your Razorpay key_id
+  //     amount: order.amount,
+  //     currency: "INR",
+  //     name: 'Your Company Name',
+  //     description: 'Test Transaction',
+  //     order_id: order.id,
+  //     offers: order.offers,
+  //     handler: async (response) => {
+  //       const { razorpay_payment_id, razorpay_order_id, razorpay_signature } =
+  //         response;
+
+  //       try {
+  //         const verifyResponse = await axios.post(
+  //           "https://backendinternspot.onrender.com/api/payment/verify",
+  //           {
+  //             razorpay_payment_id,
+  //             razorpay_order_id,
+  //             razorpay_signature,
+  //           }
+  //         );
+
+  //         if (verifyResponse.data.success) {
+  //           alert("Payment verified and completed successfully");
+  //           window.location.href = `http://localhost:3000/create-resume?reference=${razorpay_payment_id}`;
+  //         } else {
+  //           alert("Payment capture failed. Please try again.");
+  //         }
+  //       } catch (error) {
+  //         console.error(
+  //           "Error during payment verification and capture:",
+  //           error.message
+  //         );
+  //         alert("Failed to verify payment. Please try again.");
+  //       }
+  //     },
+  //     prefill: {
+  //         name: 'John Doe',
+  //         email: 'john.doe@example.com',
+  //         contact: '9999999999'
+  //     },
+  //     theme: {
+  //         color: '#F37254'
+  //     }
+  // };
+
+
+    console.log(window);
     const rzp1 = new window.Razorpay(options);
     rzp1.open();
   };
@@ -154,17 +268,20 @@ function Navbar() {
         const { uid, displayName, email, photoURL } = user;
 
         try {
-          const response = await axios.post("https://backendinternspot.onrender.com/api/users", {
-            uid,
-            name: displayName,
-            email,
-            photo: photoURL,
-            subscription: {
-              id: "",
-              status: "inactive", // default status
-              plan: "Free", // default plan
-            },
-          });
+          const response = await axios.post(
+            "https://backendinternspot.onrender.com/api/users",
+            {
+              uid,
+              name: displayName,
+              email,
+              photo: photoURL,
+              subscription: {
+                id: "",
+                status: "inactive", // default status
+                plan: "Free", // default plan
+              },
+            }
+          );
 
           //   //Update Redux state with user data
           //  dispatch(login(response.data));
@@ -185,14 +302,6 @@ function Navbar() {
       });
   };
 
-  const handleMouseLeave = (event) => {
-    if (
-      !popupRef.current.contains(event.relatedTarget) &&
-      !photoRef.current.contains(event.relatedTarget)
-    ) {
-      hidetheProfile();
-    }
-  };
 
   const showLogin = () => {
     setDivVisibleFrologin(true);
@@ -426,6 +535,7 @@ function Navbar() {
                           Login With Google
                         </h4>
                       </p>
+
                       <div className="mt-4 flex items-center justify-between">
                         <span className="border-b- w-1/5 lg:w-1/4"></span>
                         <p className="text-gray-500 text sm font-bold mb-2">
@@ -434,36 +544,72 @@ function Navbar() {
                         </p>
                         <span className="border-b- w-1/5 lg:w-1/4"></span>
                       </div>
-                      <div className="mt-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2">
-                          Email{" "}
-                        </label>
-                        <input
-                          className=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
-                          type="email"
-                          placeholder="john@example.com"
-                        />
-                      </div>
-                      <div className="mt-4">
-                        <div className="flex justify-between">
-                          <label className="block text-gray-700 text-sm font-bold mb-2">
-                            Password
+
+                      <h2>Sign in with phone</h2>
+                      
+
+                        {expandForm === true ? (
+                          <>
+                            <form onSubmit={verifyCode}>
+                            <div className="mt-4">
+                              <label className="block text-gray-700 text-sm font-bold mb-2">
+                                OTP{" "}
+                              </label>
+                              <input
+                                className=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                                type="number"
+                                placeholder="Enter One time OTP"
+                                value={verificationCode}
+                                onChange={(e) => setVerificationCode(e.target.value)}
+                              />
+                              <button
+                                type="submit"
+                                className="btn3  bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600 "
+                              >
+                                Verify OTP
+                              </button>      
+                            </div>
+                            </form>
+                          </>
+                        ) : 
+                        <>
+                      <form onSubmit={requestOTP}>
+                        
+                        <div className="mt-4">
+                          <label
+                            htmlFor="phoneNumberInput"
+                            className="block text-gray-700 text-sm font-bold mb-2"
+                          >
+                            Phone no{" "}
                           </label>
-                          <a href="/" className="text-xs text-blue-500">
-                            Forget Password?
-                          </a>
+                          <input
+                            className="text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                            type="tel"
+                            id="phoneNumberInput"
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                          />
+                          <div id="phoneNumberHelp">Enter Phone number</div>
                         </div>
-                        <input
-                          className=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
-                          placeholder="Must be atleast 6 characters"
-                          type="password"
-                        />
-                      </div>
-                      <div className="mt-8">
-                        <button className="btn3  bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600 ">
-                          Login
-                        </button>
-                      </div>
+
+                        <div className="mt-8">
+                          <button
+                            type="submit"
+                            className="btn3  bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600 "
+                          >
+                            Request OTP
+                          </button>
+                        </div>
+
+                        <div id="recaptcha-container"></div>
+                        </form>
+                      </>
+                        
+                        }
+
+              
+
+                       
 
                       <div className="mt-4 flex items-center justify-between">
                         <p className="text-sm">
@@ -573,7 +719,7 @@ function Navbar() {
               <div>
                 {!otpSent ? (
                   <button className="mt-4 ml-16" onClick={() => sendOtp()}>
-                    Send OTP to Email
+                    Send OTP to Email for creating resume
                   </button>
                 ) : (
                   <div className="flex flex-col items-center mt-2 space-y-4">
@@ -594,11 +740,11 @@ function Navbar() {
                 )}
                 {order && (
                   <div className="goldenref">
-                  <button onClick={()=>handlePayment()}>
-                    <p id="int" className="mt-2">
-                      <i class="bi bi-star-fill"></i>Create Resume
-                    </p>
-                  </button>
+                    <button onClick={() => handlePayment()}>
+                      <p id="int" className="mt-2">
+                        <i class="bi bi-star-fill"></i>Create Resume
+                      </p>
+                    </button>
                   </div>
                 )}
               </div>

@@ -57,7 +57,18 @@ function Home() {
       {user ? (
         <>
           <div className="mt-5">
-            <h1 className="text-4xl">Hi, {user?.name} 👋</h1>
+            <h1 className="text-4xl">Hi, 
+              {user.phoneNumber ?
+              
+              <>
+              {user.phoneNumber}
+              </>
+              :
+              <>
+              {user.name}
+              </>
+              }
+            </h1>
             <p class="text-center">Let’s help you land your dream career</p>
           </div>
         </>

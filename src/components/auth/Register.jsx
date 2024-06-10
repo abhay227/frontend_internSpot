@@ -1,9 +1,12 @@
 import React, { useState } from 'react'
-import { signInWithPopup } from 'firebase/auth'
+import { signInWithPhoneNumber, signInWithPopup,RecaptchaVerifier } from 'firebase/auth'
 import './register.css'
 import {auth,provider} from "../../firebase/firebase"
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import { useSelector } from 'react-redux'
+import { selectUser } from '../../Feature/Userslice'
+
 function Register() {
   const [isStudent,setStudent]=useState(true)
   const [isDivVisible, setDivVisible]=useState(false)
@@ -11,6 +14,12 @@ function Register() {
   const [lname,setLname]=useState("")
   const [email,setEmail]=useState("")
   const [password,setPassword]=useState("")
+  const countryCode = "+91";
+  const [phoneNumber, setPhoneNumber] = useState(countryCode);
+  const [expandForm, setExpandForm] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [confirmationResult, setConfirmationResult] = useState(null);
+  const user = useSelector(selectUser);
   let navigate=useNavigate()
   const handleSingin=()=>{
     signInWithPopup(auth,provider).then((res)=>{
@@ -35,6 +44,56 @@ const setFalseForStudent=()=>{
 const closeLogin=()=>{
     setDivVisible(false)
 }
+
+const requestOTP = async (e) => {
+  e.preventDefault();
+  console.log(phoneNumber);
+  try{
+    const response = await generateRecaptcha(phoneNumber);
+    console.log(response);
+    setConfirmationResult(response);
+    setExpandForm(true);
+  }catch(error){
+    console.log(error);
+  }
+};
+
+
+const generateRecaptcha = (phoneNumber) => {
+  const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {});
+  recaptchaVerifier.render();
+  return signInWithPhoneNumber(auth,phoneNumber,recaptchaVerifier);
+};
+
+
+const verifyCode = async (e) => {
+e.preventDefault();
+
+if (!verificationCode) {
+  alert("Please enter the verification code.");
+  return;
+}
+
+if (!confirmationResult) {
+  alert("No OTP request found. Please request OTP first.");
+  return;
+}
+
+try {
+  const result = await confirmationResult.confirm(verificationCode);
+  // User signed in successfully
+  const user = result.user;
+  console.log(user);
+  setExpandForm(false);
+  navigate("/");
+} catch (error) {
+  console.error("Error during verifying code:", error);
+  alert("Invalid verification code. Please try again.");
+}
+};
+
+
+
   return (
     <div>
       <div className="form">
@@ -62,28 +121,70 @@ const closeLogin=()=>{
 <span className='border-b w-1/5 lg:w1/4'></span>
                </div>
 
-              <div className="mt-4">
-                <label htmlFor="email" className='border-b text-gray-700 text-sm font-bold mb-2'>Email</label>
-                <input type="email"  value={email} onChange={(e)=>setEmail(e.target.value)} className='text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none' id='email' />
-              </div> 
-              <div className="mt-4">
-                <label htmlFor="password" className='border-b text-gray-700 text-sm font-bold mb-2'>Password</label>
-                <input type="text"  value={password} onChange={(e)=>setPassword(e.target.value)} className='text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none' id='password' />
-              </div> 
-              <div className="mt-4 flex justify-between">
-<div>
-<label htmlFor="Fname" className='border-b text-gray-700 text-sm font-bold mb-2'>First Name</label>
-                <input type="text" className='text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none' id='Fname' value={fname} onChange={(e)=>setFname(e.target.value)} />
-</div>
-<div className='ml-5'>
-<label htmlFor="Lname" className='border-b text-gray-700 text-sm font-bold mb-2'>Last Name</label>
-                <input type="text" className='text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none' id='Lname'  value={lname} onChange={(e)=>setLname(e.target.value)}/>
-</div>
-              </div>
+               <h2 className='text-center'>Sign in with phone</h2>
+
+               {expandForm === true ? (
+                          <>
+                            <form onSubmit={verifyCode}>
+                            <div className="mt-4">
+                              <label className="block text-gray-700 text-sm font-bold mb-2">
+                                OTP{" "}
+                              </label>
+                              <input
+                                className=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                                type="number"
+                                placeholder="Enter One time OTP"
+                                value={verificationCode}
+                                onChange={(e) => setVerificationCode(e.target.value)}
+                              />
+                              <button
+                                type="submit"
+                                className="btn3  bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600 "
+                              >
+                                Verify OTP
+                              </button>      
+                            </div>
+                            </form>
+                          </>
+                        ) : 
+                        <>
+                      <form onSubmit={requestOTP}>
+                        
+                        <div className="mt-4">
+                          <label
+                            htmlFor="phoneNumberInput"
+                            className="block text-gray-700 text-sm font-bold mb-2"
+                          >
+                            Phone no{" "}
+                          </label>
+                          <input
+                            className="text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                            type="tel"
+                            id="phoneNumberInput"
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                          />
+                          <div id="phoneNumberHelp">Enter Phone number</div>
+                        </div>
+
+                        <div className="mt-8">
+                          <button
+                            type="submit"
+                            className="btn3  bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600 "
+                          >
+                            Request OTP
+                          </button>
+                        </div>
+
+                        <div id="recaptcha-container"></div>
+                        </form>
+                      </>
+                        
+                        }
+
               <small>By signing up, you agree to our <span className='text-blue-400'>Term and Conditions.
                 </span></small>
-                <button className='bg-blue-500 h-9 text-white font-bold py-2 mt-4 px-4 w-full rounded hover:bg-blue-600'>Sign Up </button>
-                Already registered? <span className='text-blue-400 cursor-pointer' onClick={showLogin}>Login</span> 
+                
 </div>
           </div>
         </div>
